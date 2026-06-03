@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <title>C7講座 試薬一覧</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow">
+  <style>
+    :root{
+      --bg:#f6f7fb; --card:#fff; --ink:#0f172a; --muted:#6b7280;
+      --primary:#2563eb; --primary-ring:rgba(37,99,235,.28);
+      --danger:#ef4444; --ok:#16a34a; --line:#e5e7eb;
+      --radius:16px; --shadow:0 8px 24px rgba(16,24,40,.12);
+    }
+    *{box-sizing:border-box}
+    body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; color:var(--ink); background:radial-gradient(1000px 700px at 80% -10%, #f7f9ff, transparent 60%), var(--bg);}
+    header{padding:18px 20px; background:linear-gradient(180deg,#fff,#f7f7fb); border-bottom:1px solid #eee; position:sticky; top:0; z-index:20;}
+    .wrap{max-width:1380px; margin:0 auto; padding:18px;}
+    h1{font-size:26px; margin:0 0 6px}.sub{font-size:13px; color:var(--muted)}
+    .card{background:var(--card); border:1px solid #eee; border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; margin-bottom:16px;}
+    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+    label{font-size:12px; color:var(--muted); display:block; margin-bottom:6px;}
+    select,input,textarea{width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:12px; background:#fff; font-size:14px; outline:none;}
+    input:focus,select:focus,textarea:focus{border-color:var(--primary); box-shadow:0 0 0 4px var(--primary-ring);}
+    button{appearance:none; border:0; padding:11px 14px; border-radius:12px; font-weight:600; cursor:pointer; white-space:nowrap;}
+    .btn-primary{background:var(--primary); color:#fff}.btn-edit{background:#f59e0b; color:#fff}.btn-ghost{background:#fff; border:1px solid var(--line); color:#111827}.btn-danger{background:var(--danger); color:#fff}
+    .btn-small{padding:7px 10px; font-size:12px; border-radius:10px;}
+    .ok{color:var(--ok); font-size:13px}.error{color:var(--danger); font-size:13px}.help{color:var(--muted); font-size:13px}
+    .toolbar{display:grid; grid-template-columns:250px minmax(260px,1fr) auto auto auto; gap:12px; align-items:end;}
+    @media(max-width:900px){.toolbar{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr!important}.form-grid .wide{grid-column:1/-1!important}}
+    .form-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; align-items:end;}
+    .form-grid .wide{grid-column:span 2}.form-grid .full{grid-column:1/-1}
+    .table-wrap{overflow:auto; border:1px solid var(--line); border-radius:14px; max-height:70vh; background:#fff;}
+    table{width:100%; border-collapse:separate; border-spacing:0; min-width:1150px; font-size:13px;}
+    thead th{position:sticky; top:0; z-index:3; background:#f8fafc; border-bottom:1px solid var(--line); color:#374151; text-align:left; padding:10px; white-space:nowrap;}
+    tbody td{border-bottom:1px solid #f1f5f9; padding:9px 10px; vertical-align:top; white-space:pre-wrap;}
+    tbody tr:hover{background:#f9fbff;}
+    th.action-col,td.action-col{position:sticky; right:0; z-index:2; background:#fff; border-left:1px solid var(--line); text-align:center; min-width:142px;}
+    .action-buttons{display:flex; gap:6px; justify-content:center; align-items:center;}
+    thead th.action-col{z-index:4; background:#f8fafc;}
+    tbody tr:hover td.action-col{background:#f9fbff;}
+    .badge{display:inline-flex; align-items:center; justify-content:center; font-size:12px; padding:3px 9px; border-radius:999px; background:#eef2ff; color:#1e40af; border:1px solid #c7d2fe; font-weight:600;}
+    .loading-overlay{position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(255,255,255,.65); z-index:99999;}
+    .loading-box{display:flex; flex-direction:column; align-items:center; padding:18px 20px; border-radius:16px; background:rgba(255,255,255,.9); box-shadow:var(--shadow);}
+    .spinner{width:42px; height:42px; border-radius:50%; border:3px solid #e5e7eb; border-top-color:var(--primary); animation:spin .9s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .top-link{color:#2563eb; text-decoration:none; font-weight:600}.empty{padding:26px; color:var(--muted); text-align:center;}
+  </style>
+</head>
+<body>
+  <div id="loading" class="loading-overlay"><div class="loading-box"><div class="spinner"></div><div id="loadingText" class="help" style="margin-top:12px">読み込み中…</div></div></div>
+
+  <header>
+    <div class="wrap">
+      <h1>C7講座 試薬一覧</h1>
+      <div class="sub">選択シートのみ表示 / 検索時は全シート検索 / <a class="top-link" href="index.html">予約ページへ戻る</a></div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card">
+      <div class="toolbar">
+        <div><label>表示するシート</label><select id="sheetSelect"></select></div>
+        <div><label>全シートキーワード検索</label><input id="searchInput" type="text" placeholder="例）Ethanol / エタノール / Wako / 705"></div>
+        <button id="searchBtn" type="button" class="btn-primary" onclick="searchAllSheets()">全シート検索</button>
+        <button id="clearSearchBtn" type="button" class="btn-ghost" onclick="clearSearchAndLoadSheet()">検索解除</button>
+        <button id="toggleAddBtn" type="button" class="btn-primary">試薬を追記</button>
+      </div>
+      <div class="row" style="margin-top:12px"><span id="sheetInfo" class="badge">未読み込み</span><span id="msg" class="help"></span></div>
+    </section>
+
+    <section id="addCard" class="card" style="display:none;">
+      <h2 style="font-size:18px; margin:0 0 12px;">試薬を追記</h2>
+      <div class="form-grid">
+        <div><label>追記先シート</label><select id="addSheetSelect"></select></div>
+        <div><label>整理番号</label><input id="f_no" placeholder="空欄可"></div>
+        <div class="wide"><label>試薬名（英語表記）</label><input id="f_nameEn" placeholder="例）Sodium Chloride"></div>
+        <div class="wide"><label>試薬名（日本語表記）</label><input id="f_nameJa" placeholder="例）塩化ナトリウム"></div>
+        <div><label>メーカー名</label><input id="f_maker"></div>
+        <div><label>製品番号</label><input id="f_productNo"></div>
+        <div><label>ロット番号</label><input id="f_lotNo"></div>
+        <div><label>容量</label><input id="f_volume" placeholder="例）500 g"></div>
+        <div><label>数量</label><input id="f_quantity" type="number" min="0" step="1" value="1"></div>
+        <div><label>容器材質</label><input id="f_material" placeholder="ガラス / プラスチック等"></div>
+        <div><label>納品日</label><input id="f_deliveryDate" placeholder="例）2026.5.22"></div>
+        <div><label>保管場所</label><input id="f_location" placeholder="例）705試薬棚"></div>
+        <div class="full"><label>備考</label><textarea id="f_note" rows="2"></textarea></div>
+        <div class="full row" style="justify-content:flex-end;"><button id="clearFormBtn" type="button" class="btn-ghost">入力をクリア</button><button id="addBtn" type="button" class="btn-primary">追記する</button></div>
+      </div>
+      <div class="help" style="margin-top:10px;">※追記先シートの見出し行に存在する列だけに追記します。</div>
+    </section>
+
+    <section id="editCard" class="card" style="display:none; border-color:#f59e0b;">
+      <h2 style="font-size:18px; margin:0 0 12px;">試薬情報を変更</h2>
+      <div class="row" style="margin-bottom:12px">
+        <span id="editTarget" class="badge">未選択</span>
+        <span class="help">変更内容はスプレッドシートの該当行に上書きされます。</span>
+      </div>
+      <div class="form-grid">
+        <div><label>整理番号</label><input id="e_no" placeholder="空欄可"></div>
+        <div class="wide"><label>試薬名（英語表記）</label><input id="e_nameEn"></div>
+        <div class="wide"><label>試薬名（日本語表記）</label><input id="e_nameJa"></div>
+        <div><label>メーカー名</label><input id="e_maker"></div>
+        <div><label>製品番号</label><input id="e_productNo"></div>
+        <div><label>ロット番号</label><input id="e_lotNo"></div>
+        <div><label>容量</label><input id="e_volume"></div>
+        <div><label>数量</label><input id="e_quantity" type="number" min="0" step="1"></div>
+        <div><label>容器材質</label><input id="e_material"></div>
+        <div><label>納品日</label><input id="e_deliveryDate"></div>
+        <div><label>保管場所</label><input id="e_location"></div>
+        <div class="full"><label>備考</label><textarea id="e_note" rows="2"></textarea></div>
+        <div class="full row" style="justify-content:flex-end;">
+          <button id="cancelEditBtn" type="button" class="btn-ghost">変更をキャンセル</button>
+          <button id="updateBtn" type="button" class="btn-edit">変更を保存</button>
+        </div>
+      </div>
+      <div class="help" style="margin-top:10px;">※シートの見出し行に存在する列だけを更新します。</div>
+    </section>
+
+    <section class="card">
+      <div id="tableWrap" class="table-wrap"><div class="empty">シートを読み込んでください</div></div>
+    </section>
+  </main>
+
+<script>
+  /* ========= 設定 ========= */
+  const API_BASE = "https://script.google.com/macros/s/AKfycbxsLWt8hlvKMV-bD5RBTB9FFrWvgY4N_Hg0OAfaifVxHF1ym2IZ1kJ0HN8D9f_-9bo/exec";
+
+  const $ = q => document.querySelector(q);
+  const esc = s => String(s ?? "").replace(/[&<>'"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c]));
+  function setLoading(on, text="読み込み中…"){ $("#loading").style.display = on ? "flex" : "none"; $("#loadingText").textContent = text; }
+  function showMsg(text,type="help"){ const e=$("#msg"); e.className=type; e.textContent=text||""; }
+
+  let currentHeaders = [];
+  let currentItems = [];
+  let currentMode = "sheet";
+  let lastSearchQuery = "";
+  let editTarget = null;
+
+  async function apiGet(params){
+    const url = new URL(API_BASE);
+    Object.entries(params).forEach(([k,v])=>url.searchParams.set(k,v));
+    url.searchParams.set("_", Date.now());
+    const r = await fetch(url.toString(), {cache:"no-store"});
+    return await r.json();
+  }
+  async function apiPost(body){
+    const r = await fetch(API_BASE, {method:"POST", headers:{"Content-Type":"text/plain"}, body:JSON.stringify(body)});
+    return await r.json();
+  }
+
+  async function loadSheets(){
+    setLoading(true,"シート一覧を読み込み中…");
+    try{
+      const res = await apiGet({action:"reagentSheets"});
+      if(!res.ok) throw new Error(res.error || "シート一覧の取得に失敗しました");
+      fillSheetSelects(res.sheets || []);
+      if(res.sheets?.length){ await loadSheet($("#sheetSelect").value); }
+      else { $("#tableWrap").innerHTML = '<div class="empty">シートが見つかりません</div>'; }
+    }catch(e){ showMsg(e.message,"error"); }
+    finally{ setLoading(false); }
+  }
+
+  function fillSheetSelects(sheets){
+    const sheetSel = $("#sheetSelect");
+    const addSel = $("#addSheetSelect");
+    sheetSel.innerHTML = "";
+    addSel.innerHTML = "";
+    sheets.forEach(s => {
+      const opt1 = document.createElement("option");
+      opt1.value = s.name; opt1.textContent = `${s.name}（${s.count}件）`;
+      sheetSel.appendChild(opt1);
+      const opt2 = document.createElement("option");
+      opt2.value = s.name; opt2.textContent = s.name;
+      addSel.appendChild(opt2);
+    });
+  }
+
+  async function loadSheet(sheetName){
+    if(!sheetName) return;
+    currentMode = "sheet";
+    lastSearchQuery = "";
+    $("#searchInput").value = "";
+    setLoading(true,`${sheetName} を読み込み中…`);
+    try{
+      const res = await apiGet({action:"reagentList", sheet:sheetName});
+      if(!res.ok) throw new Error(res.error || "一覧の取得に失敗しました");
+      currentHeaders = res.headers || [];
+      currentItems = res.items || [];
+      $("#sheetInfo").textContent = `${res.sheet}：${currentItems.length}件`;
+      renderTable(currentHeaders, currentItems, "sheet");
+      showMsg("読み込みました","ok");
+    }catch(e){ showMsg(e.message,"error"); }
+    finally{ setLoading(false); }
+  }
+
+  async function searchAllSheets(){
+    const q = $("#searchInput").value.trim();
+    if(!q){ showMsg("検索語を入力してください","error"); return; }
+    currentMode = "search";
+    lastSearchQuery = q;
+    setLoading(true,"全シートを検索中…");
+    try{
+      const res = await apiGet({action:"reagentSearch", q});
+      if(!res.ok) throw new Error(res.error || "検索に失敗しました");
+      currentHeaders = res.headers || [];
+      currentItems = res.items || [];
+      $("#sheetInfo").textContent = `全シート検索「${q}」：${currentItems.length}件`;
+      renderTable(currentHeaders, currentItems, "search");
+      showMsg("検索しました","ok");
+    }catch(e){ showMsg(e.message,"error"); }
+    finally{ setLoading(false); }
+  }
+
+  function renderTable(headers, items, mode){
+    const wrap = $("#tableWrap");
+    const visibleHeaders = headers.filter(h => h && !String(h).startsWith("_"));
+    if(!visibleHeaders.length){ wrap.innerHTML = '<div class="empty">見出し行がありません</div>'; return; }
+    if(!items.length){ wrap.innerHTML = '<div class="empty">該当する試薬はありません</div>'; return; }
+
+    const thead = visibleHeaders.map(h=>`<th>${esc(h)}</th>`).join("") + '<th class="action-col">操作</th>';
+    const rows = items.map((row, idx) => {
+      const sheetName = row._sheetName || $("#sheetSelect").value;
+      const rowNumber = row._rowNumber;
+      const tds = visibleHeaders.map(h=>`<td>${esc(row[h] || "")}</td>`).join("");
+      return `<tr>${tds}<td class="action-col"><div class="action-buttons"><button class="btn-edit btn-small" onclick="startEditByIndex(${idx})">変更</button><button class="btn-danger btn-small" onclick="deleteReagent('${escAttr(sheetName)}', ${Number(rowNumber)})">削除</button></div></td></tr>`;
+    }).join("");
+    wrap.innerHTML = `<table><thead><tr>${thead}</tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  function escAttr(s){ return String(s ?? "").replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\n/g," ").replace(/\r/g," "); }
+
+  function collectForm(){
+    return {
+      "整理番号": $("#f_no").value.trim(),
+      "試薬名（英語表記）": $("#f_nameEn").value.trim(),
+      "試薬名（日本語表記）": $("#f_nameJa").value.trim(),
+      "メーカー名": $("#f_maker").value.trim(),
+      "製品番号": $("#f_productNo").value.trim(),
+      "ロット番号": $("#f_lotNo").value.trim(),
+      "容量": $("#f_volume").value.trim(),
+      "数量": $("#f_quantity").value.trim(),
+      "容器材質": $("#f_material").value.trim(),
+      "納品日": $("#f_deliveryDate").value.trim(),
+      "備考": $("#f_note").value.trim(),
+      "保管場所": $("#f_location").value.trim()
+    };
+  }
+
+  function clearForm(){
+    ["#f_no","#f_nameEn","#f_nameJa","#f_maker","#f_productNo","#f_lotNo","#f_volume","#f_material","#f_deliveryDate","#f_location","#f_note"].forEach(id=>$(id).value="");
+    $("#f_quantity").value="1";
+  }
+
+
+  function getValueByCandidates(row, candidates){
+    for(const key of candidates){
+      if(row[key] !== undefined && row[key] !== null) return row[key];
+    }
+    return "";
+  }
+
+  function setEditForm(row){
+    $("#e_no").value = getValueByCandidates(row, ["整理番号"]);
+    $("#e_nameEn").value = getValueByCandidates(row, ["試薬名（英語表記）", "試薬名 英語", "試薬名(英語表記)", "英語名"]);
+    $("#e_nameJa").value = getValueByCandidates(row, ["試薬名（日本語表記）", "試薬名 日本語", "試薬名(日本語表記)", "日本語名"]);
+    $("#e_maker").value = getValueByCandidates(row, ["メーカー名", "メーカー"]);
+    $("#e_productNo").value = getValueByCandidates(row, ["製品番号", "カタログ番号"]);
+    $("#e_lotNo").value = getValueByCandidates(row, ["ロット番号", "Lot", "LOT"]);
+    $("#e_volume").value = getValueByCandidates(row, ["容量"]);
+    $("#e_quantity").value = getValueByCandidates(row, ["数量"]);
+    $("#e_material").value = getValueByCandidates(row, ["容器材質"]);
+    $("#e_deliveryDate").value = getValueByCandidates(row, ["納品日"]);
+    $("#e_location").value = getValueByCandidates(row, ["保管場所"]);
+    $("#e_note").value = getValueByCandidates(row, ["備考"]);
+  }
+
+  function collectEditForm(){
+    return {
+      "整理番号": $("#e_no").value.trim(),
+      "試薬名（英語表記）": $("#e_nameEn").value.trim(),
+      "試薬名（日本語表記）": $("#e_nameJa").value.trim(),
+      "メーカー名": $("#e_maker").value.trim(),
+      "製品番号": $("#e_productNo").value.trim(),
+      "ロット番号": $("#e_lotNo").value.trim(),
+      "容量": $("#e_volume").value.trim(),
+      "数量": $("#e_quantity").value.trim(),
+      "容器材質": $("#e_material").value.trim(),
+      "納品日": $("#e_deliveryDate").value.trim(),
+      "備考": $("#e_note").value.trim(),
+      "保管場所": $("#e_location").value.trim()
+    };
+  }
+
+  function startEditByIndex(index){
+    const row = currentItems[index];
+    if(!row){ showMsg("変更対象を取得できません", "error"); return; }
+    const sheet = row._sheetName || $("#sheetSelect").value;
+    const rowNumber = Number(row._rowNumber);
+    if(!sheet || !rowNumber){ showMsg("変更対象を特定できません", "error"); return; }
+    editTarget = { sheet, rowNumber };
+    $("#editTarget").textContent = `${sheet}：${rowNumber}行目`;
+    setEditForm(row);
+    $("#editCard").style.display = "block";
+    $("#editCard").scrollIntoView({behavior:"smooth", block:"start"});
+  }
+
+  function cancelEdit(){
+    editTarget = null;
+    $("#editTarget").textContent = "未選択";
+    $("#editCard").style.display = "none";
+  }
+
+  async function updateReagent(){
+    if(!editTarget){ showMsg("変更対象が選択されていません", "error"); return; }
+    const data = collectEditForm();
+    if(!data["試薬名（英語表記）"] && !data["試薬名（日本語表記）"]){ showMsg("試薬名を入力してください", "error"); return; }
+    if(!confirm(`${editTarget.sheet} の ${editTarget.rowNumber} 行目を変更します。よろしいですか？`)) return;
+    setLoading(true,"変更を保存中…");
+    try{
+      const res = await apiPost({action:"reagentUpdate", sheet:editTarget.sheet, rowNumber:editTarget.rowNumber, item:data});
+      if(!res.ok) throw new Error(res.error || "変更に失敗しました");
+      cancelEdit();
+      if(currentMode === "search" && lastSearchQuery){ await searchAllSheets(); }
+      else { await loadSheet($("#sheetSelect").value); }
+      showMsg("変更しました", "ok");
+    }catch(e){ showMsg(e.message,"error"); }
+    finally{ setLoading(false); }
+  }
+
+  async function addReagent(){
+    const sheet = $("#addSheetSelect").value;
+    const data = collectForm();
+    if(!data["試薬名（英語表記）"] && !data["試薬名（日本語表記）"]){ showMsg("試薬名を入力してください","error"); return; }
+    if(!confirm(`${sheet} に追記します。よろしいですか？`)) return;
+    setLoading(true,"試薬を追記中…");
+    try{
+      const res = await apiPost({action:"reagentAdd", sheet, item:data});
+      if(!res.ok) throw new Error(res.error || "追記に失敗しました");
+      clearForm();
+      if(currentMode === "search" && lastSearchQuery){ await searchAllSheets(); }
+      else { $("#sheetSelect").value = sheet; await loadSheet(sheet); }
+      showMsg("追記しました","ok");
+    }catch(e){ showMsg(e.message,"error"); }
+    finally{ setLoading(false); }
+  }
+
+
+  function clearSearchAndLoadSheet(){
+    $("#searchInput").value = "";
+    loadSheet($("#sheetSelect").value);
+  }
+
+  async function deleteReagent(sheet, rowNumber){
+    if(!sheet || !rowNumber){ showMsg("削除対象を特定できません","error"); return; }
+    if(!confirm(`${sheet} の ${rowNumber} 行目を削除します。よろしいですか？`)) return;
+    setLoading(true,"削除中…");
+    try{
+      const res = await apiPost({action:"reagentDelete", sheet, rowNumber});
+      if(!res.ok) throw new Error(res.error || "削除に失敗しました");
+      if(currentMode === "search" && lastSearchQuery){ await searchAllSheets(); }
+      else { await loadSheet($("#sheetSelect").value); }
+      showMsg("削除しました","ok");
+    }catch(e){ showMsg(e.message,"error"); }
+    finally{ setLoading(false); }
+  }
+
+  $("#sheetSelect").addEventListener("change", e => loadSheet(e.target.value));
+  $("#searchBtn").addEventListener("click", e => { e.preventDefault(); searchAllSheets(); });
+  $("#searchInput").addEventListener("keydown", e => { if(e.key === "Enter"){ e.preventDefault(); searchAllSheets(); } });
+  $("#clearSearchBtn").addEventListener("click", e => { e.preventDefault(); clearSearchAndLoadSheet(); });
+  $("#toggleAddBtn").addEventListener("click", () => { const c=$("#addCard"); c.style.display = c.style.display === "none" ? "block" : "none"; });
+  $("#clearFormBtn").addEventListener("click", e => { e.preventDefault(); clearForm(); });
+  $("#addBtn").addEventListener("click", e => { e.preventDefault(); addReagent(); });
+  $("#cancelEditBtn").addEventListener("click", e => { e.preventDefault(); cancelEdit(); });
+  $("#updateBtn").addEventListener("click", e => { e.preventDefault(); updateReagent(); });
+
+  window.searchAllSheets = searchAllSheets;
+  window.clearSearchAndLoadSheet = clearSearchAndLoadSheet;
+  window.startEditByIndex = startEditByIndex;
+  window.deleteReagent = deleteReagent;
+
+  loadSheets();
+</script>
+</body>
+</html>

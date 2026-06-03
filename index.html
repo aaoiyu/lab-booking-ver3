@@ -193,11 +193,44 @@
   </div>
 
   <header>
-    <div class="wrap">
-      <h1>C7講座 機器予約システム</h1>
-      <div class="sub">URLでのみ共有</div>
+  <div class="wrap">
+    <div style="
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      flex-wrap:wrap;
+      gap:12px;
+    ">
+      <div>
+        <h1 style="margin:0;">C7講座 機器予約システム</h1>
+        <div class="sub">URLでのみ共有</div>
+      </div>
+
+      <a
+        href="reagents_20260522.html"
+        target="_blank"
+        style="
+          background:#2563eb;
+          color:white;
+          text-decoration:none;
+          padding:16px 32px;
+          border-radius:16px;
+          font-weight:700;
+          font-size:20px;
+          display:inline-flex;
+          align-items:center;
+          gap:12px;
+          box-shadow:0 6px 16px rgba(37,99,235,.3);
+          transition:all .2s ease;
+        "
+        onmouseover="this.style.transform='scale(1.05)'"
+        onmouseout="this.style.transform='scale(1)'"
+      >
+      🧪 試薬一覧
+    </a>
     </div>
-  </header>
+  </div>
+</header>
 
   <!-- 右下：浮遊メニューボタン（既存のまま） -->
   <button id="menuToggle" class="fab-menu" aria-expanded="false" aria-controls="menuOverlay" aria-label="メニューを開閉">
@@ -271,7 +304,7 @@
     /* ========= 設定 ========= */
     const API_BASE   = "https://script.google.com/macros/s/AKfycbxhmRVsm97p_A1SVzXcI8IMyCz0TPpfeLCXOPFmV3ODBLa15iDrIXDQEAGlsRbsFYo/exec";
     const PASS_HASH  = "622f39f7b19b05f92e2e23c19ec2a73484b67f74fbcd8a20a5f365e59936bb65";
-    const ROOMS      = ["Thermal Cycler Wako WK-0232","Thermal Cycler ASTEC GeneAtlas 482","リアルタイムPCR","動物細胞培養室 | クリーンベンチ"];
+    const ROOMS      = ["Thermal Cycler Wako WK-0232","Thermal Cycler ASTEC GeneAtlas 482","リアルタイムPCR","動物細胞培養室 | クリーンベンチ","実験室 | クリーンベンチ"];
     const SLOT_MIN   = 15, DAY_START_MIN = 8*60, DAY_END_MIN = 20*60;
     const GATE_KEY   = "room-pass-ok", REMEMBER_DAYS = 7;
 
@@ -280,7 +313,8 @@
       "Thermal Cycler Wako WK-0232":       "https://drive.google.com/thumbnail?id=1Gn27zv-VFZKsQbFs19ts-eJNepHOv4m6",    //https://drive.google.com/file/d/1Gn27zv-VFZKsQbFs19ts-eJNepHOv4m6/view?usp=sharing
       "Thermal Cycler ASTEC GeneAtlas 482":"https://drive.google.com/thumbnail?id=1xydznaObhr0Ij2OLJk0d2NfGFXo_GHfM",    //https://drive.google.com/file/d/1xydznaObhr0Ij2OLJk0d2NfGFXo_GHfM/view?usp=sharing
       "リアルタイムPCR":                    "https://drive.google.com/thumbnail?id=13lA0P8xF8evITg8QWewqKFAyGACqKW2d",    //https://drive.google.com/file/d/13lA0P8xF8evITg8QWewqKFAyGACqKW2d/view?usp=sharing
-      "動物細胞培養室 | クリーンベンチ":   ""
+      "動物細胞培養室 | クリーンベンチ":   "",
+      "実験室 | クリーンベンチ":   ""
     };
 
     /* ========= Util ========= */
